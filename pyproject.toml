@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "privatemode-document-store"
+version = "0.1.0"
+description = "A minimal document storage service."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Marko Rosenmüller" }]
+keywords = ["fastapi", "vector", "retrieval", "chromadb", "document-store"]
+dependencies = [
+  "fastapi>=0.111.0,<1.0",
+  "uvicorn[standard]>=0.30.0,<1.0",
+  "chromadb>=1.0.0,<2.0",
+  "gunicorn>=21.2.0,<22.0",
+  "openai",
+  "tiktoken",
+  "transformers"
+]
+
+[project.scripts]
+document-store = "privatemode.document_store.__main__:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+include = ["privatemode*"]
+exclude = ["tests*", "docs*"]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "httpx>=0.27",
+  "anyio>=4.4",
+  "sentence_transformers",
+]

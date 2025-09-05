@@ -1,0 +1,31 @@
+# use this file to initialize the virtual env
+# usage: source venv.rc
+
+venv=./.venv
+
+mod_venv=venv
+
+# create the venv if not yet there
+if [ ! -d "$venv" ]; then
+  # Prefer higher versions first, starting from 3.12
+  for py in python3.12 python3.11 python3.10 python3; do
+    if command -v "$py" >/dev/null 2>&1; then
+      pybin=$(command -v "$py")
+      break
+    fi
+  done
+  if [ -z "$pybin" ]; then echo "python3 not found"; return 1; fi
+  ver=$($pybin -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+  major=${ver%%.*}; minor=${ver##*.}
+  if [ "$major" -lt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -lt 12 ]; }; then
+    echo "Python >=3.12 required for this project (found $ver at $pybin)."; return 1
+  fi
+  $pybin -m $mod_venv $venv
+  source $venv/bin/activate
+  python -m pip install --upgrade pip
+else
+  source $venv/bin/activate
+fi
+
+# Install the project with dev extras (quote to avoid zsh globbing)
+python -m pip install -e '.[dev]'
