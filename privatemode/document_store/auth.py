@@ -72,9 +72,12 @@ def verify_api_key(auth_header: str) -> None:
             _cached_api_key = stripped
             save_api_key(_cached_api_key)
 
-    if _cached_api_key:
-        if not auth_header or auth_header.strip() != _cached_api_key:
-            raise HTTPException(status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid API Key"})
+
+    # only accept the saved key
+    if _cached_api_key is not None and _cached_api_key == auth_header:
+        return
+
+    raise HTTPException(status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid API Key"})
 
 def verify_origin(origin: str) -> None:
     if not origin:
