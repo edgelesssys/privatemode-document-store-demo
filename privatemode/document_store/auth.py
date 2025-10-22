@@ -60,24 +60,30 @@ def verify_api_key(auth_header: str) -> None:
     if _cached_api_key is None:
         _cached_api_key = load_api_key()
 
+    # for testing, we allow a dummy key, which can only be used until a valid key is set
+    if auth_header and auth_header.strip():
+        auth_header = auth_header.strip()
+        # Strip "Bearer " prefix if present
+        if auth_header.startswith("Bearer "):
+            auth_header = auth_header[7:]
+
     # if no api key is set, we store the first api key we get
     if _cached_api_key is None:
         # for testing, we allow a dummy key, which can only be used until a valid key is set
-        if auth_header and auth_header.strip():
-            stripped = auth_header.strip()
-            if stripped == SMOKE_TEST_API_KEY:
-                # allow dummy key for testing, until a key is set
-                return
+        if auth_header and auth_header == SMOKE_TEST_API_KEY:
+            # allow dummy key for testing, until a key is set
+            return
 
-            _cached_api_key = stripped
-            save_api_key(_cached_api_key)
+        _cached_api_key = auth_header
+        save_api_key(_cached_api_key)
 
 
     # only accept the saved key
     if _cached_api_key is not None and _cached_api_key == auth_header:
         return
 
-    raise HTTPException(status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid API Key"})
+    path = os.path.abspath(os.path.join(_auth_key_path, "api_key.json")) if _auth_key_path is not None else "None"
+    raise HTTPException(status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid API Key: " + path})
 
 def verify_origin(origin: str) -> None:
     if not origin:

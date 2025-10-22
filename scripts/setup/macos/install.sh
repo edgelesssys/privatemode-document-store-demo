@@ -204,6 +204,7 @@ fi
 step_begin "Store test doc"
 STORE_CODE=$(curl -sS -o /tmp/eds_install_store.json -w "%{http_code}" \
   -X POST "${BASE_URL}/documents" -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer test-key' \
   -d '{"collection":"docs","id":"install-smoke","text":"hello world","metadata":{}}') || STORE_CODE=000
 if [[ "${STORE_CODE}" == "201" ]]; then
   step_end "${GREEN}OK${RESET}" "(201)"
@@ -215,6 +216,7 @@ fi
 step_begin "Query"
 QUERY_CODE=$(curl -sS -o /tmp/eds_install_query.json -w "%{http_code}" \
   -X POST "${BASE_URL}/retrieval/query" -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer test-key' \
   -d '{"collection":"docs","query":"hello world","top_k":5}') || QUERY_CODE=000
 if [[ "${QUERY_CODE}" == "200" ]]; then
   step_end "${GREEN}OK${RESET}" "(200)"
