@@ -91,6 +91,20 @@ class TestFTSStore:
         assert results[0]["snippet"] is not None
         assert "<b>" in results[0]["snippet"]  # Highlighting tags
 
+    def test_search_hyphenated_query(self, store):
+        """Hyphenated keywords should not crash FTS5 query parsing."""
+        chunk = FTSChunk(
+            chunk_id="chunk1",
+            doc_id="doc1",
+            text="Qwen3 Embedding 4B is an embedding model",
+            meta={"updated_at": time.time()},
+        )
+        store.upsert_chunks([chunk])
+
+        results = store.search("Qwen3-Embedding-4B")
+        assert len(results) == 1
+        assert results[0]["chunk_id"] == "chunk1"
+
     def test_search_limit(self, store):
         """Test search with limit."""
         chunks = [
