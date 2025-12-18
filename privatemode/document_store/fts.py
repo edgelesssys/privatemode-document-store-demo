@@ -33,6 +33,14 @@ import json
 import os
 
 
+def _fts5_quote_phrase(query: str) -> str:
+    q = (query or "").strip()
+    if not q:
+        return q
+    # FTS5 phrase quoting uses double quotes; escape embedded quotes by doubling.
+    return '"' + q.replace('"', '""') + '"'
+
+
 @dataclass(frozen=True)
 class FTSChunk:
     chunk_id: str
@@ -234,7 +242,19 @@ class FTSStore:
         with self._lock:
             cur = self._conn.cursor()
             try:
-                cur.execute(sql, params)
+                try:
+                    cur.execute(sql, params)
+                except sqlite3.OperationalError as e:
+                    # FTS5 query parser treats characters like '-' as operators.
+                    # If parsing fails (e.g. "no such column: Embedding"), retry as a quoted phrase.
+                    fallback = _fts5_quote_phrase(query)
+                    if fallback and fallback != query:
+                        query_param_idx = 1 if with_snippet else 0
+                        params2 = list(params)
+                        params2[query_param_idx] = fallback
+                        cur.execute(sql, params2)
+                    else:
+                        raise
                 rows = cur.fetchall()
             finally:
                 cur.close()
