@@ -20,25 +20,37 @@ PRIVATEMODE_API_BASE="${PRIVATEMODE_API_BASE:-}"
 
 mkdir -p "${APP_DIR}" "${BIN_DIR}" "${LOG_DIR}"
 
-# Pick a suitable Python (3.12+) if not provided
+# Pick a suitable Python (prefer 3.12, then 3.11, then 3.10) if not provided
 if [[ -z "${PYTHON_BIN}" ]]; then
-  # Prefer Homebrew Python
-  if [[ -x "/opt/homebrew/bin/python3" ]]; then
-    PYTHON_BIN="/opt/homebrew/bin/python3"
-  elif command -v python3 >/dev/null 2>&1; then
-    PYTHON_BIN="$(command -v python3)"
-  else
+  for candidate in \
+    "/opt/homebrew/bin/python3.12" "/opt/homebrew/bin/python3.11" "/opt/homebrew/bin/python3.10" \
+    "/usr/local/bin/python3.12" "/usr/local/bin/python3.11" "/usr/local/bin/python3.10" \
+    "python3.12" "python3.11" "python3.10" "python3"; do
+    if [[ "${candidate}" == /* ]]; then
+      if [[ -x "${candidate}" ]]; then
+        PYTHON_BIN="${candidate}"
+        break
+      fi
+    else
+      if command -v "${candidate}" >/dev/null 2>&1; then
+        PYTHON_BIN="$(command -v "${candidate}")"
+        break
+      fi
+    fi
+  done
+
+  if [[ -z "${PYTHON_BIN}" ]]; then
     echo "ERROR: python3 not found. Install with: brew install python" >&2
     exit 1
   fi
 fi
 
-# Verify Python version >= 3.12
+# Verify Python version >= 3.10 (we prefer 3.12+ but allow 3.10/3.11)
 PY_VER_STR="$(${PYTHON_BIN} -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || echo 0)"
 PY_VER_MAJOR="${PY_VER_STR%%.*}"
 PY_VER_MINOR="${PY_VER_STR##*.}"
-if [[ "${PY_VER_MAJOR}" -lt 3 || ( "${PY_VER_MAJOR}" -eq 3 && "${PY_VER_MINOR}" -lt 12 ) ]]; then
-  echo "ERROR: Python ${PY_VER_STR} found at ${PYTHON_BIN}; need >= 3.12. Try: brew install python" >&2
+if [[ "${PY_VER_MAJOR}" -lt 3 || ( "${PY_VER_MAJOR}" -eq 3 && "${PY_VER_MINOR}" -lt 10 ) ]]; then
+  echo "ERROR: Python ${PY_VER_STR} found at ${PYTHON_BIN}; need >= 3.10. Try: brew install python" >&2
   exit 1
 fi
 
