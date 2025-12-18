@@ -18,7 +18,7 @@ logger = logging.getLogger("privatemode.document_store")
 logger.info("Chroma version:", chromadb.__version__)
 
 # Initialize the tokenizer
-tokenizer = AutoTokenizer.from_pretrained('intfloat/multilingual-e5-large-instruct')
+tokenizer = AutoTokenizer.from_pretrained('Qwen/Qwen3-Embedding-4B')
 
 def tokenize(text: str) -> List[int]:
     """Tokenize text using the multilingual E5 tokenizer."""
@@ -33,7 +33,7 @@ class Collection:
         # Using Any for chromadb collection to avoid tight coupling to internal module path
         self.collection: Any = collection
         self.fts_store = fts_store
-        self.max_embedding_size = 512 - 20  # for multilingual-e5-large-instruct (-20 as buffer for tokenizer differences)
+        self.max_embedding_size = 1024  # the model support 32k; 1k to have smaller chunks
 
     def split_document(self, doc: str, chunk_size_tokens: int, overlap: int = 15) -> List[str]:
         """Split document into chunks using tokenization with overlap."""
@@ -178,7 +178,7 @@ class HybridDb:
             from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
             self.embedding_function = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
         else:
-            model = "intfloat/multilingual-e5-large-instruct"
+            model = "qwen3-embedding-4b"
             api_base = os.getenv("PRIVATEMODE_API_BASE", "http://localhost:8080/v1")
             api_key = os.getenv("PRIVATEMODE_API_KEY", "dummy")
             logger.info(f"Using OpenAI embedding function with model '{model}' and API base '{api_base}'")
