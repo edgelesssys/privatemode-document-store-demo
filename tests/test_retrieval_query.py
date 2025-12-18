@@ -146,13 +146,14 @@ def test_split_document_chunking(tmp_path):
     # Test long word slicing
     long_word = "a" * 2000  # 2000-char word
     chunks_long = coll.split_document(long_word, chunk_size_tokens=chunk_size, overlap=0)
-    assert len(chunks_long) == 4
+    # Tokenization is model-dependent; derive expected chunk count from token count.
+    long_word_tokens = tokenize(long_word)
+    expected_chunks = (len(long_word_tokens) + chunk_size - 1) // chunk_size
+    assert len(chunks_long) == expected_chunks
 
-    # as we split a long word, the chunks may result in a slightly different number of tokens as we create new words
-    assert len(tokenize(chunks_long[0])) <= chunk_size + 1
-    assert len(tokenize(chunks_long[1])) <= chunk_size + 1
-    assert len(tokenize(chunks_long[2])) <= chunk_size + 1
-    assert len(tokenize(chunks_long[3])) == 18
+    # As we split a long word, detokenize/retokenize may shift token counts slightly.
+    for i, chunk in enumerate(chunks_long):
+        assert len(tokenize(chunk)) <= chunk_size + 1, f"Chunk {i} too large: {len(tokenize(chunk))} tokens"
 
 
 def test_list_documents_with_limit(tmp_path):

@@ -44,6 +44,13 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Debug privatemode.document_store",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "privatemode.document_store",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Attach to debugpy (Gunicorn worker)",
             "type": "debugpy",
             "request": "attach",
