@@ -16,6 +16,7 @@ dependencies = [
   "uvicorn[standard]>=0.30.0,<1.0",
   "chromadb>=1.0.0,<2.0",
   "gunicorn>=21.2.0,<22.0",
+  "qdrant-client>=1.10.0,<2.0",
   "openai",
   "tiktoken",
   "transformers"

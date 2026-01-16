@@ -1,10 +1,16 @@
-import glob
-import os
+import importlib
 import uuid
 
 import pytest
 
-from privatemode.document_store.hybrid_db import Collection, HybridDb
+from privatemode.document_store.hybrid_db import Collection
+
+
+def _get_backend(backend: str):
+    backend = (backend or "chroma").lower()
+    if backend == "qdrant":
+        return importlib.import_module("privatemode.document_store.hybrid_db_qdrant")
+    return importlib.import_module("privatemode.document_store.hybrid_db_chroma")
 
 
 def _populate(collection: Collection):
@@ -41,9 +47,10 @@ def _populate(collection: Collection):
     collection.upsert("5", doc5, {"role": "assistant"})
 
 
-def test_vector_db_add_and_search(tmp_path):
+def test_vector_db_add_and_search(tmp_path, hybrid_db_backend):
     db_path = tmp_path / "chroma"
-    db = HybridDb(str(db_path), embedding_function_local=True)
+    backend = _get_backend(hybrid_db_backend)
+    db = backend.HybridDb(str(db_path), embedding_function_local=True)
     coll_name = f"test_{uuid.uuid4().hex[:8]}"
     coll = db.create_collection(coll_name, embed=True)
 
@@ -69,9 +76,10 @@ def test_vector_db_add_and_search(tmp_path):
         db.get_collection(coll_name)
 
 
-def test_vector_db_no_embed(tmp_path):
+def test_vector_db_no_embed(tmp_path, hybrid_db_backend):
     db_path = tmp_path / "chroma"
-    db = HybridDb(str(db_path), embedding_function_local=True)
+    backend = _get_backend(hybrid_db_backend)
+    db = backend.HybridDb(str(db_path), embedding_function_local=True)
     coll_name = f"test_noembed_{uuid.uuid4().hex[:8]}"
     coll = db.create_collection(coll_name, embed=False)
 
